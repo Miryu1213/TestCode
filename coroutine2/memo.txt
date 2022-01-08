@@ -1,0 +1,63 @@
+co_await　コルーチンを中断、再開ポイント
+co_yield co_await式に展開される
+
+suspend_always コルーチンを中断させるトリビアル(細部)Awaittable(一時停止できる)型
+
+// プログラマが記述するコルーチン
+generator iota(int end)
+{
+  for (int n = 0; n < end; ++n) {
+    co_yield n;
+  }
+}
+
+// C++コンパイラにより展開されたコード
+generator iota(int end)
+{
+  // コルーチンに対応するPromiseオブジェクトを初期化
+  generator::promise_type promise;
+
+  // 戻り値型オブジェクトの初期化
+  generator result = promise.get_return_object();
+  // コルーチンハンドルをget_return_object内で取得し、resultメンバで保持する。
+  // 生成したresultオブジェクトは、初回のコルーチン中断時に呼出元へ返される。
+
+  // 本例では全て co_await std::suspend_always{} 相当のため、
+  // 以降のco_await式(★箇所)においてコルーチンは中断／再開される。
+
+  // 初期サスペンドポイント
+  co_await promise.initial_suspend(); //★
+
+  // コルーチン本体部
+  {
+    for (int n = 0; n < end; ++n) {
+      // co_yield式は下記co_await式に展開される
+      co_await promise.yield_value(n); //★
+    }
+  }
+  promise.return_void();
+
+  // 最終サスペンドポイント
+  co_await promise.final_suspend(); //★
+
+  // 本例では最終サスペンドポイントでコルーチンを中断するため、ここには制御が到達しない。
+  // 呼出側で戻り値オブジェクトを破棄すると、デストラクタ経由で本コルーチンは破棄される。
+}
+
+C++のコルーチンはコンパイル時に展開される形のようです。
+co_yield, co_returnキーワードのある関数をコンパイル時に展開し
+中断しているように値を保存して、再開できる形でまた実行されます。
+
+つまり今回の形ですと
+generator classのcoroutin_handleがresume()を呼ぶたびに
+co_yieldが次に進みます。
+co_yieldが進む前に
+promise_type::yield_value
+が実行され値がコピー（状態が保存）されます。
+そうして最後まで呼び出し側の処理が完了すると
+co_returnが呼ばれる場合は
+promise_type::return_valueが呼ばれます。
+co_returnがない場合は
+promise_type::return_voidが呼ばれます。
+
+呼ばれますと書いていますが、そういう風になるように展開される、という事のようです。
