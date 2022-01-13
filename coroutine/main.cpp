@@ -20,6 +20,8 @@ std::experimental::generator<int> TestCoroutine()
     //I—¹‚ÉˆÃ–Ù“I‚Éco_return‚ÍŒÄ‚Î‚ê‚é
 }
 
+int cnt = 0;
+
 int main()
 {
     int num = 0;
@@ -28,4 +30,6 @@ int main()
         printf("%d‰ñ–Ú:%d\n",num, n);
         num++;
     }
+    printf("%d", cnt);
+    cnt++;
 }
