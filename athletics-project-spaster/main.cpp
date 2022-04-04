@@ -184,11 +184,20 @@ int main(int argc, char* argv[])
         trainar->CreateSearchList(map_);
     }
 
+    //トレーナー索敵位置のコスト変更
+    for (const auto& trainar : trainarList_)
+    {
+        for (const auto& searchPos : trainar->GetSearchList())
+        {
+            map_[searchPos.y_][searchPos.x_] = FRONTTRAINARCOST;
+        }
+    }
+
     //lpAStarMng.Create(limitPos_, townB_, map_);
     AStarMng* asMng = new AStarMng(limitPos_, townB_, map_);
 
     //サトシルート確定
-    //satoshiPath_ = asMng->AStarCreateSP(townA_, trainarList_);
+    satoshiPath_ = asMng->AStarCreateSP(townA_, trainarList_);
     //satoshiPath_ = asMng->AStarCreateN(townA_);
 
     //画面出力
@@ -217,12 +226,10 @@ int main(int argc, char* argv[])
         cout << "\n";
     }
 
-    delete asMng;
     //lpAStarMng.Destroy();
 
     //AB間距離
     int distanceAB = static_cast<int>(satoshiPath_.size());
-
     //バトル回数
     int battleNum = 0;
     for (const auto& satoshiPos : satoshiPath_)
@@ -232,6 +239,7 @@ int main(int argc, char* argv[])
 
     cout << distanceAB << " " << battleNum;
 
+    delete asMng;
     ifs.close();
 
     for (auto& trainar : trainarList_)

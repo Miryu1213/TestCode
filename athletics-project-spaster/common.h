@@ -18,9 +18,11 @@ const string WALL = "#";
 
 //コスト
 //移動不可
-const int CNTMOVECOST = 9;
+const int CNTMOVECOST = 10000;
 //道
 const int ROADCOST = 2;
+//トレーナー前
+const int FRONTTRAINARCOST = 1;
 //街
 const int TOWNCOST = 0;
 
