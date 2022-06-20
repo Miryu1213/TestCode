@@ -1,56 +1,8 @@
 #include <windows.h>
 #include <d3dx9.h>
+#include "DirectGraphics.h"
 
-#pragma comment(lib, "d3dxq.lib")
-
-LPDIRECT3D9 pD3d;
-LPDIRECT3DDEVICE9 pDevice;
-
-//関数のプロトタイプ宣言
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-
-//ダイレクト3Dの初期化
-HRESULT InitD3d(HWND hWnd)
-{
-	//DirectX3Dオブジェクトの作成
-	pD3d = Direct3DCreate9(D3D_SDK_VERSION);
-	if (pD3d == NULL)
-	{
-		MessageBox(0, "Direct3Dの作成に失敗しました", "", MB_OK);
-		return E_FAIL;
-	}
-
-	//Direct3Dデバイスオブジェクトの作成
-	D3DPRESENT_PARAMETERS d3pp;
-	ZeroMemory(&d3pp, sizeof(d3pp));
-
-	//バックバッファの設定
-	d3pp.BackBufferFormat = D3DFMT_UNKNOWN;
-	d3pp.BackBufferCount = 1;
-	//バックバッファとフロントのスワップ形式
-	d3pp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	//ウィンドウのモード（true:ウィンドウ false:フルスクリーン）
-	d3pp.Windowed = TRUE;
-
-	//DirectDeviceの作成
-	if (!pD3d->CreateDevice(
-		D3DADAPTER_DEFAULT,		//ディスプレイアダプタの種類
-		D3DDEVTYPE_HAL,			//デバイスの種類（HALデバイス（ハードウェアごとの違いを吸収してくれるもの）を活用）
-		hWnd,					//ウィンドウのハンドル
-		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED,	//デバイス制御の組み合わせ基本的にはこれを使う
-		&d3pp,					//デバイスを設定するための構造体
-		&pDevice				//設定されたデバイス内容を保存するアドレス
-	))
-	{
-		return false;
-	}
-}
-
-
-
-VOID DrawSprite(VOID);
-
-// ①．ウィンドウプロシージャ作成
+//ウィンドウプロシージャ作成
 LRESULT CALLBACK WindowProcedure(HWND window_handle, UINT message_id, WPARAM wparam, LPARAM lparam)
 {
 	switch (message_id)
@@ -109,11 +61,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmpLine
 	ShowWindow(hWnd, SW_SHOW);
 	UpdateWindow(hWnd);
 
-	//ダイレクト3Dの初期化
-	if (!InitD3d(hWnd))
-	{
-		return 0;
-	}
+	// DirectGraphicsの初期化
+	InitDirectGraphics(hWnd);
+
 
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
@@ -133,8 +83,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmpLine
 			continue;
 		}
 
-		DrawSprite();
+		// 描画開始
+		if (StartDraw() == true)
+		{
+			// 描画終了
+			EndDraw();
+		}
 	}
 
-	return msg.wParam;
+	// DirectGraphicsの解放
+	ReleaseDirectGraphics();
+
+	return (int)msg.wParam;
 }
